@@ -1,0 +1,8 @@
+{
+  "Name": "Astra",
+  "Type":  "Ranger",
+  "Health": 120,
+  "Attack": 25,
+  "Defense": 10,
+  "Abilities": [ "Slash", "Shield Bash" ]
+}

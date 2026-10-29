@@ -48,6 +48,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Ranger_Character_Info.json" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
