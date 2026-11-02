@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
+using System.Linq;
 
 namespace Battle_Simulator
 {
@@ -44,7 +45,7 @@ namespace Battle_Simulator
                         break;
                     case "3":
                         // Sort Characters logic here
-                        Console.WriteLine("Sort Characters ... NEEDS IMPLEMENTATION ");
+                        SortCharacters(characters);
                         break;
                     case "4":
                         // View Characters logic here
@@ -63,6 +64,74 @@ namespace Battle_Simulator
                     Console.WriteLine("\n Press Enter to continue...");
                     Console.ReadLine(); // Wait for user input before continuing the loop.
                 }
+            }
+        }
+
+        // Interface to define a contract for classes that can use special abilities in battle.
+        public interface IAbilityUser
+        {
+            string UseSpecialAbility(BattleCharacterBase target);
+        }
+
+        // Abstract base class for battle characters, implementing the IAbilityUser interface.
+        public abstract class BattleCharacterBase : IAbilityUser
+        {
+            public int Id { get; set; }
+            public string Name { get; set; }
+            public string Type { get; set; }
+            public int Health { get; set; }
+            public int AttackPower { get; set; }
+            public int Defence { get; set; }
+
+            public virtual int Attack(BattleCharacterBase target)
+            {
+                return Attack(target, 0);
+            }
+
+            public virtual int Attack(BattleCharacterBase target, int bonusDamage)
+            {
+                int damage = Math.Max(1, (AttackPower + bonusDamage) - target.Defence);
+                target.Health -= damage;
+                return damage;
+            }
+
+            public abstract string UseSpecialAbility(BattleCharacterBase target);
+        }
+
+        // Derived classes for specific character types, each implementing their own special ability.
+        public class Knight : BattleCharacterBase
+        {
+            public override string UseSpecialAbility(BattleCharacterBase target)
+            {
+                int dmg = Attack(target, 8);
+                return Name + " Used shield Bash for " + dmg + " damage. ";
+            }
+        }
+
+        public class Archer : BattleCharacterBase
+        {
+            public override string UseSpecialAbility(BattleCharacterBase target)
+            {
+                int dmg = Attack(target, 10);
+                return Name + " Used Arrow Rain for " + dmg + "damage. ";
+            }
+        }
+
+        public class Mage : BattleCharacterBase
+        {
+            public override string UseSpecialAbility(BattleCharacterBase target)
+            {
+                Health += 12;
+                return Name + " Used Heal and restored 12 health.";
+            }
+        }
+
+        public class Assassin : BattleCharacterBase
+        {
+            public override string UseSpecialAbility(BattleCharacterBase target)
+            {
+                int dmg = Attack(target, 15);
+                return Name + " Used Shadow Strike for " + dmg + " damage. ";
             }
         }
 
@@ -129,31 +198,10 @@ namespace Battle_Simulator
             return new List<Character>
             {
                 new Character { Id = 001, Name = "Brandon", Type = "Warrior", Health = 100, Attack = 20, Defence = 10, SpAbility = "Berserk" },
-                new Character { Id = 002, Name = "Astra", Type = "Mage", Health = 80, Attack = 25, Defence = 5, SpAbility = "Fireball" },
+                new Character { Id = 002, Name = "Astra", Type = "Mage", Health = 80, Attack = 25, Defence = 5, SpAbility = "Heal" },
                 new Character { Id = 003, Name = "Archie", Type = "Archer", Health = 90, Attack = 15, Defence = 8, SpAbility = "Arrow Rain" },
                 new Character { Id = 004, Name = "Luna", Type = "Assassin", Health = 70, Attack = 30, Defence = 5, SpAbility = "Shadow Strike" },
             };
-        }
-
-        // Method to display all characters in the console.
-        private static void ViewAllCharacters(List<Character> characters)
-        {
-            // Validate the list before trying to display data.
-            if (characters == null || characters.Count == 0)
-            {
-                Console.WriteLine("No characters available to display.");
-                return;
-            }
-
-           // Console.Clear(); // Clear the console for a fresh display.
-            GameTitle.PrintTitle(); // Print the game title again for the character view.
-            Console.WriteLine("===== Character List =====\n");
-
-            // Display each character's details in a formatted manner.
-            foreach (Character c in characters)
-            {
-                Console.WriteLine($"ID: {c.Id}, Name: {c.Name}, Type: {c.Type}, Health: {c.Health}, Attack: {c.Attack}, Defence: {c.Defence}, Special Ability: {c.SpAbility}");
-            }
         }
 
         // Method to search for characters by name or type.
@@ -199,6 +247,82 @@ namespace Battle_Simulator
                 Console.WriteLine("No characters found matching the search criteria.");
             }
         }
+
+        // Method to sort characters based on user selected criteria.
+        private static void SortCharacters(List<Character> characters)
+        {
+            // Validate the list before trying to sort data.
+            if (characters == null || characters.Count == 0)
+            {
+                GameTitle.PrintTitle();
+                Console.WriteLine("No characters available to sort.");
+                return;
+            }
+
+            GameTitle.PrintTitle();
+            Console.WriteLine("===== Sort Characters =====\n");
+            Console.WriteLine("1. Sort by name (A-Z)");
+            Console.WriteLine("2. Sort by type (A-Z)");
+            Console.WriteLine("3. Sort by health (High to Low)");
+            Console.WriteLine("4. Sort by attack (High to Low)");
+            Console.WriteLine("5. Sort by defence (High to Low)");
+            Console.WriteLine("\n Please enter a number to choose a sorting option: ");
+
+            string choice = Console.ReadLine(); // Read user input for sorting choice.
+
+            List<Character> sorted;
+
+            switch (choice)
+            {
+                case "1":
+                    sorted = characters.OrderBy(c => c.Name).ToList(); // Sort by name in ascending order.
+                    break;
+                case "2":
+                    sorted = characters.OrderBy(c => c.Type).ToList(); // Sort by type in ascending order.
+                    break;
+                case "3":
+                    sorted = characters.OrderByDescending(c => c.Health).ToList(); // Sort by health in descending order.
+                    break;
+                case "4":
+                    sorted = characters.OrderByDescending(c => c.Attack).ToList(); // Sort by attack in descending order.
+                    break;
+                case "5":
+                    sorted = characters.OrderByDescending(c => c.Defence).ToList(); // Sort by defence in descending order.
+                    break;
+                default:
+                    Console.WriteLine("\n Invalid choice. Returning to main menu.");
+                    return; // Exit back to the main menu if the input is invalid.
+            }
+
+            Console.WriteLine("\n ===== Results After Sorting =====\n");
+
+            // Display the sorted list of characters.
+            foreach (Character c in sorted)
+            {
+                Console.WriteLine($"ID: {c.Id}, Name: {c.Name}, Type: {c.Type}, Health: {c.Health}, Attack: {c.Attack}, Defence: {c.Defence}, Special Ability: {c.SpAbility}");
+
+            }
+        }
+        // Method to display all characters in the console.
+        private static void ViewAllCharacters(List<Character> characters)
+        {
+            // Validate the list before trying to display data.
+            if (characters == null || characters.Count == 0)
+            {
+                Console.WriteLine("No characters available to display.");
+                return;
+            }
+
+           // Console.Clear(); // Clear the console for a fresh display.
+            GameTitle.PrintTitle(); // Print the game title again for the character view.
+            Console.WriteLine("===== Character List =====\n");
+
+            // Display each character's details in a formatted manner.
+            foreach (Character c in characters)
+            {
+                Console.WriteLine($"ID: {c.Id}, Name: {c.Name}, Type: {c.Type}, Health: {c.Health}, Attack: {c.Attack}, Defence: {c.Defence}, Special Ability: {c.SpAbility}");
+            }
+        }  
     }
 
 
